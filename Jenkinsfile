@@ -51,15 +51,9 @@ pipeline {
     }
 
     stage('Trivy Scan') {
-    steps {
-        sh '''
-            export TRIVY_CACHE_DIR=/var/lib/jenkins/.cache/trivy
-            mkdir -p $TRIVY_CACHE_DIR
-            trivy image --download-db-only
-            trivy image --severity HIGH,CRITICAL yourdockerhubusername/react-app
-        '''
-    }
-}
+      steps {
+        sh 'trivy image --exit-code 0 --severity CRITICAL,HIGH $IMAGE_NAME:latest'
+      }
     }
 
     stage('Push to DockerHub') {
