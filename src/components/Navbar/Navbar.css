@@ -1,0 +1,117 @@
+.glass-navbar {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  min-height: 90px;
+  transition: all 0.3s ease;
+}
+
+.glass-navbar.scrolled {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-logo {
+  height: 50px;
+  width: auto;
+}
+
+.nav-menu-container {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 52px;
+  padding: 0.5rem 1rem;
+  margin: 0 1rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.navbar-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-link {
+  color: #fff !important;
+  font-weight: 500;
+  padding: 0.7rem 1.2rem !important;
+  margin: 0 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  border-color: rgba(156, 39, 176, 0.3);
+  background: rgba(156, 39, 176, 0.1);
+  color: #fff !important;
+}
+
+.get-started-btn {
+  background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+  border: none;
+  padding: 0.7rem 2.1rem !important;
+  border-radius: 48px !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: #fff;
+  height: 45px;
+  position: absolute;
+  right: 15px;
+  box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+}
+
+.get-started-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+  background: linear-gradient(135deg, #8e24aa 0%, #5e35b1 100%);
+}
+
+/* Responsive styles */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+  }
+
+  .nav-menu-container {
+    position: static;
+    transform: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .get-started-btn {
+    position: static;
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .nav-link {
+    margin: 0.5rem 0;
+  }
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler-icon {
+  filter: invert(1);
+} 
