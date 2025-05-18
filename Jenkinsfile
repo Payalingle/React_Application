@@ -53,11 +53,13 @@ pipeline {
     stage('Trivy Scan') {
     steps {
         sh '''
-            mkdir -p /var/lib/jenkins/trivy-cache
+            export TRIVY_CACHE_DIR=/var/lib/jenkins/.cache/trivy
+            mkdir -p $TRIVY_CACHE_DIR
             trivy image --download-db-only
-            trivy image --cache-dir /var/lib/jenkins/trivy-cache --severity HIGH,CRITICAL yourdockerhubusername/react-app
+            trivy image --severity HIGH,CRITICAL yourdockerhubusername/react-app
         '''
     }
+}
     }
 
     stage('Push to DockerHub') {
