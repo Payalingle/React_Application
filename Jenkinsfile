@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    node('my-agent') {
 
     environment {
         SONARQUBE = 'SonarQubeServer'
@@ -64,5 +64,6 @@ pipeline {
             echo 'Pipeline finished.'
         }
     }
+}
 }
 
