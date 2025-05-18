@@ -1,5 +1,5 @@
 pipeline {
-    node('my-agent') {
+    node {
 
     environment {
         SONARQUBE = 'SonarQubeServer'
