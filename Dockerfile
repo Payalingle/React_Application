@@ -1,7 +1,7 @@
 # Dockerfile
 
 # Stage 1: Build React app
-FROM node:20 as build
+FROM node:18 as build
 WORKDIR /app
 COPY . .
 RUN npm install
