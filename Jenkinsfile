@@ -1,36 +1,16 @@
 pipeline {
-    node {
-
-    environment {
-        SONARQUBE = 'SonarQubeServer'
-        SONAR_TOKEN = credentials('sonar-token')
-        DOCKER_IMAGE = 'my-react-app'
-    }
+    agent any
 
     stages {
-        stage('Clone') {
+        stage('Clone Repository') {
             steps {
                 git 'https://github.com/Payalingle/React_Application.git'
             }
         }
 
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh """
-                        npx sonar-scanner \
-                        -Dsonar.projectKey=react-app \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_TOKEN
-                    """
-                }
             }
         }
 
@@ -40,30 +20,16 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t react-app .'
             }
         }
 
-        stage('Trivy Scan') {
+        stage('Docker Run') {
             steps {
-                sh 'trivy image --exit-code 0 --severity HIGH,CRITICAL $DOCKER_IMAGE'
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                sh 'docker run -d -p 3000:80 --name react_app_container $DOCKER_IMAGE'
+                sh 'docker run -d -p 3000:3000 react-app'
             }
         }
     }
-
-    post {
-        always {
-            echo 'Pipeline finished.'
-        }
-    }
 }
-}
-
