@@ -7,7 +7,7 @@ pipeline {
         IMAGE_NAME = 'payalingle/react-app'
         SONAR_HOST_URL = 'http://your-ec2-ip:9000'
         SONAR_PROJECT_KEY = 'react_app'
-        SONAR_TOKEN = credentials('sonar-token')  // Jenkins secret text
+        SONAR_TOKEN = credentials('SonarQube API Token')  // Jenkins secret text
     }
 
     stages {
