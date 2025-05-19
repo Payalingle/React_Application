@@ -13,9 +13,8 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'main',
-            credentialsId: 'github-creds',   // <-- Make sure this is created in Jenkins
-            url: 'https://github.com/Payalingle/React_Application.git'
+        git branch: 'main', url: 'https://github.com/Payalingle/React_Application.git', credentialsId: 'github-creds',   // <-- Make sure this is created in Jenkins
+            
       }
     }
 
