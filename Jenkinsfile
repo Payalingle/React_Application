@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    node('my-agent') {
 
     environment {
         GIT_CREDENTIALS_ID = 'github-creds'
@@ -84,5 +84,6 @@ pipeline {
         failure {
             echo 'Pipeline failed.'
         }
+    }
     }
 }
