@@ -5,7 +5,11 @@ pipeline {
         SONARQUBE_SERVER = 'SonarQube'  // Matches your Jenkins SonarQube config name
         DOCKER_IMAGE = 'payalingle/React_Application'   // Corrected to your DockerHub repo
     }
-
+   tools {
+        // Ensure 'NodeJS' is the name configured in Jenkins Global Tool Configuration
+        nodejs 'NodeJS'
+    }
+    
     stages {
         stage('Install Dependencies') {
             steps {
