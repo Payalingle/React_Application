@@ -2,14 +2,18 @@ pipeline {
     agent any
 
     environment {
-        SONAR_TOKEN = credentials('sonar-token')
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        GIT_CREDENTIALS_ID = 'github-creds'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+        IMAGE_NAME = 'yourdockerhubusername/react-app'
+        SONAR_HOST_URL = 'http://your-ec2-ip:9000'
+        SONAR_PROJECT_KEY = 'react_app'
+        SONAR_TOKEN = credentials('sonar-token')  // Jenkins secret text
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'github-creds', url: 'https://github.com/Payalingle/React_Application.git'
+                git credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/Payalingle/React_Application.git'
             }
         }
 
@@ -19,45 +23,66 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'npx sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN'
+                    sh """
+                        npx sonar-scanner \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${IMAGE_NAME}")
                 }
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh '''
-                docker build -t react-app-temp .
-                trivy image --exit-code 0 --severity HIGH,CRITICAL react-app-temp
-                '''
+                sh 'trivy image --severity HIGH,CRITICAL ${IMAGE_NAME} || true'
             }
         }
 
-        stage('Docker Build and Push') {
+        stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh '''
-                    docker build -t $USERNAME/react-app:latest .
-                    echo $PASSWORD | docker login -u $USERNAME --password-stdin
-                    docker push $USERNAME/react-app:latest
-                    '''
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker tag ${IMAGE_NAME} ${IMAGE_NAME}:latest
+                        docker push ${IMAGE_NAME}:latest
+                    """
                 }
             }
         }
 
-        stage('Clean Up') {
+        stage('Deploy Container') {
             steps {
-                sh 'docker rmi react-app-temp || true'
+                sh """
+                    docker rm -f react_container || true
+                    docker run -d --name react_container -p 3000:3000 ${IMAGE_NAME}:latest
+                """
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline execution completed.'
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
