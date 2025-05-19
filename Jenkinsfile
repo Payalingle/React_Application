@@ -1,5 +1,5 @@
 pipeline {
-    node('my-agent') {
+    agent any 
 
     environment {
         GIT_CREDENTIALS_ID = 'github-creds'
@@ -86,4 +86,4 @@ pipeline {
         }
     }
     }
-}
+
