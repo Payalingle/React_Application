@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_CREDENTIALS_ID = 'github-creds'
         DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
-        IMAGE_NAME = 'payalingle/react_application'
+        IMAGE_NAME = 'payalingle/react-app'
         SONAR_HOST_URL = 'http://your-ec2-ip:9000'
         SONAR_PROJECT_KEY = 'react_app'
         SONAR_TOKEN = credentials('sonar-token')  // Jenkins secret text
