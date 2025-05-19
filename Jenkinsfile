@@ -1,25 +1,20 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
         SONARQUBE_SERVER = 'SonarQube'  // Matches your Jenkins SonarQube config name
-        DOCKER_IMAGE = 'payalingle/React_Application'   // Corrected to your DockerHub repo
+        DOCKER_IMAGE = 'payalingle/React_Application'   // Your DockerHub repo
     }
-   tools {
-        // Ensure 'NodeJS' is the name configured in Jenkins Global Tool Configuration
+
+    tools {
+        // Make sure 'NodeJS' is configured in Jenkins Global Tool Configuration
         nodejs 'NodeJS'
     }
     
     stages {
-        stage('Install Dependencies') {
+        stage('Checkout') {
             steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'npm run build'
+                git credentialsId: 'github-creds', url: 'https://github.com/Payalingle/React_Application.git', branch: 'main'
             }
         }
 
@@ -29,18 +24,16 @@ pipeline {
                 sh 'npm -v'
             }
         }
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/Payalingle/React_Application.git', branch: 'main'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
             }
         }
 
@@ -84,4 +77,3 @@ pipeline {
         }
     }
 }
-
