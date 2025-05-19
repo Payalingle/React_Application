@@ -6,10 +6,6 @@ pipeline {
         DOCKER_IMAGE = 'payalingle/React_Application'   // Corrected to your DockerHub repo
     }
 
-    tools {
-        nodejs 'NodeJS' // This must match the name you set in Global Tool Config
-    }
-
     stages {
         stage('Install Dependencies') {
             steps {
@@ -30,7 +26,6 @@ pipeline {
             }
         }
     }
-
 
     stages {
         stage('Checkout') {
@@ -85,3 +80,4 @@ pipeline {
         }
     }
 }
+
