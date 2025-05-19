@@ -7,8 +7,30 @@ pipeline {
     }
 
     tools {
-        nodejs 'NodeJS'  // Ensure this matches your Jenkins NodeJS tool name
+        nodejs 'NodeJS' // This must match the name you set in Global Tool Config
     }
+
+    stages {
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Verify Node Version') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+    }
+
 
     stages {
         stage('Checkout') {
