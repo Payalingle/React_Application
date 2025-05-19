@@ -24,18 +24,16 @@ pipeline {
         }
 
         stage('SonarQube Scan') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                        npx sonar-scanner \
-                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=${SONAR_HOST_URL} \
-                          -Dsonar.login=${SONAR_TOKEN}
-                    """
-                }
-            }
+    steps {
+        withSonarQubeEnv('MySonarQubeServer') {
+            sh 'sonar-scanner \
+                -Dsonar.projectKey=react_app \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=http://<your-ec2-ip>:9000 \
+                -Dsonar.login=$SONAR_TOKEN'
         }
+    }
+}
 
         stage('Build Docker Image') {
             steps {
