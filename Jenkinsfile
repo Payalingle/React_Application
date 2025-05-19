@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     SONAR_HOST_URL = 'http://13.235.94.54:9000'
-    IMAGE_NAME = 'your-dockerhub-username/react-app'  // <--- change this!
+    IMAGE_NAME = 'payalingle/react-app'  // <--- change this!
   }
 
   tools {
