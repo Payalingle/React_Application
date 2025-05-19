@@ -1,27 +1,19 @@
-pipeline { 
-    agent any
+pipeline {
+    agent any 
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube'  // Matches your Jenkins SonarQube config name
-        DOCKER_IMAGE = 'payalingle/React_Application'   // Your DockerHub repo
+        GIT_CREDENTIALS_ID = 'github-creds'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+        IMAGE_NAME = 'yourdockerhubusername/react-app'
+        SONAR_HOST_URL = 'http://your-ec2-ip:9000'
+        SONAR_PROJECT_KEY = 'react_app'
+        SONAR_TOKEN = credentials('sonar-token')  // Jenkins secret text
     }
 
-    tools {
-        // Make sure 'NodeJS' is configured in Jenkins Global Tool Configuration
-        nodejs 'NodeJS'
-    }
-    
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/Payalingle/React_Application.git', branch: 'main'
-            }
-        }
-
-        stage('Verify Node Version') {
-            steps {
-                sh 'node -v'
-                sh 'npm -v'
+                git branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/Payalingle/React_Application.git'
             }
         }
 
@@ -31,22 +23,16 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('SonarQube Scan') {
             steps {
-                sh 'npm run build'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
-                    withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                        sh 'npx sonar-scanner ' +
-                           '-Dsonar.projectKey=static-react-app ' +
-                           '-Dsonar.sources=. ' +
-                           '-Dsonar.host.url=http://13.235.94.54:9000 ' +
-                           '-Dsonar.login=$SONAR_AUTH_TOKEN'
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                        npx sonar-scanner \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
@@ -54,26 +40,49 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
+                    docker.build("${IMAGE_NAME}")
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Trivy Scan') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                        sh "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    }
+                sh 'trivy image --severity HIGH,CRITICAL ${IMAGE_NAME} || true'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker tag ${IMAGE_NAME} ${IMAGE_NAME}:latest
+                        docker push ${IMAGE_NAME}:latest
+                    """
                 }
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh """
+                    docker rm -f react_container || true
+                    docker run -d --name react_container -p 3000:3000 ${IMAGE_NAME}:latest
+                """
             }
         }
     }
 
     post {
         always {
+            echo 'Cleaning up workspace...'
             cleanWs()
         }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
     }
-}
+    }
