@@ -1,88 +1,55 @@
 pipeline {
-    agent any 
+  agent any
 
-    environment {
-        GIT_CREDENTIALS_ID = 'github-creds'
-        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
-        IMAGE_NAME = 'payalingle/react-app'
-        SONAR_HOST_URL = 'http://your-ec2-ip:9000'
-        SONAR_PROJECT_KEY = 'react_app'
-        SONAR_TOKEN = credentials('sonar-token')  // Jenkins secret text
+  environment {
+    AWS_REGION = 'us-east-2'
+    ECR_REPO = '561410231694.dkr.ecr.us-east-2.amazonaws.com/react-app'
+    IMAGE_TAG = 'latest'
+  }
+
+  tools {
+    nodejs "NodeJS"  // Define this in Jenkins global tool config
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/Payalingle/React_Application.git'
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/Payalingle/React_Application.git'
-            }
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('SonarQube') {
+          sh 'npm install'
+          sh 'sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=src'
         }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('SonarQube Scan') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                        npx sonar-scanner \
-                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=${SONAR_HOST_URL} \
-                          -Dsonar.login=${SONAR_TOKEN}
-                    """
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("${IMAGE_NAME}")
-                }
-            }
-        }
-
-        stage('Trivy Scan') {
-            steps {
-                sh 'trivy image --severity HIGH,CRITICAL ${IMAGE_NAME} || true'
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker tag ${IMAGE_NAME} ${IMAGE_NAME}:latest
-                        docker push ${IMAGE_NAME}:latest
-                    """
-                }
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                sh """
-                    docker rm -f react_container || true
-                    docker run -d --name react_container -p 3000:3000 ${IMAGE_NAME}:latest
-                """
-            }
-        }
+      }
     }
 
-    post {
-        always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
-        }
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed.'
-        }
+    stage('Build Docker Image') {
+      steps {
+        sh 'docker build -t react-app .'
+        sh "docker tag react-app:latest ${ECR_REPO}:${IMAGE_TAG}"
+      }
     }
+
+    stage('Push to ECR') {
+      steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+          sh """
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+            docker push $ECR_REPO:$IMAGE_TAG
+          """
+        }
+      }
     }
+
+    stage('Deploy to EKS') {
+      steps {
+        sh 'aws eks update-kubeconfig --region us-east-2 --name react-cluster'
+        sh 'kubectl apply -f deployment.yaml'
+      }
+    }
+  }
+}
