@@ -11,12 +11,11 @@ pipeline {
     nodejs "NodeJS"  // Define this in Jenkins global tool config
   }
 
-  stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main, git 'https://github.com/Payalingle/React_Application.git'
-      }
-    }
+  stage('Checkout') {
+  steps {
+    git branch: 'main', url: 'https://github.com/Payalingle/React_Application.git'
+  }
+}
 
     stage('SonarQube Analysis') {
       steps {
