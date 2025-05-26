@@ -14,7 +14,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git 'https://github.com/Payalingle/React_Application.git'
+        git branch: 'main, git 'https://github.com/Payalingle/React_Application.git'
       }
     }
 
