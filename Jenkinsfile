@@ -1,54 +1,61 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    AWS_REGION = 'us-east-2'
-    ECR_REPO = '561410231694.dkr.ecr.us-east-2.amazonaws.com/react-app'
-    IMAGE_TAG = 'latest'
-  }
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = 'react-app-repo'
+        ECR_URI = '561410231694.dkr.ecr.us-east-1.amazonaws.com/react-app-repo'
+    }
 
-  tools {
-    nodejs "NodeJS"  // Define this in Jenkins global tool config
-  }
-
-  stage('Checkout') {
-  steps {
-    git branch: 'main', url: 'https://github.com/Payalingle/React_Application.git'
-  }
-}
-
-    stage('SonarQube Analysis') {
-      steps {
-        withSonarQubeEnv('SonarQube') {
-          sh 'npm install'
-          sh 'sonar-scanner -Dsonar.projectKey=react-app -Dsonar.sources=src'
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/Payalingle/React_Application.git'
+            }
         }
-      }
-    }
 
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t react-app .'
-        sh "docker tag react-app:latest ${ECR_REPO}:${IMAGE_TAG}"
-      }
-    }
-
-    stage('Push to ECR') {
-      steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-          sh """
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-            docker push $ECR_REPO:$IMAGE_TAG
-          """
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('My SonarQube Server') {
+                    sh '''
+                    npm install
+                    sonar-scanner \
+                      -Dsonar.projectKey=ReactApp \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=http://18.212.39.138:9000 \
+                      -Dsonar.login=squ_3cf631f9aee94493eb3078e559e5d1e4ef7c7098
+                    '''
+                }
+            }
         }
-      }
-    }
 
-    stage('Deploy to EKS') {
-      steps {
-        sh 'aws eks update-kubeconfig --region us-east-2 --name react-cluster'
-        sh 'kubectl apply -f deployment.yaml'
-      }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $ECR_REPO .'
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh '''
+                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+                    docker tag $ECR_REPO:latest $ECR_URI:latest
+                    docker push $ECR_URI:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                kubectl apply -f k8s/deployment.yaml
+                kubectl apply -f k8s/service.yaml
+                '''
+            }
+        }
     }
-  }
 }
