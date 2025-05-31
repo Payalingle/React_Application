@@ -29,15 +29,15 @@ pipeline {
 
         stage('SonarQube Scan') {
             environment {
-                SONAR_TOKEN = credentials('sonarqube-token')
+                SONAR_TOKEN = credentials('sonar-token')
             }
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
                     sh '''
                     sonar-scanner \
-                      -Dsonar.projectKey=ReactApp \
+                      -Dsonar.projectKey=React_App \
                       -Dsonar.sources=. \
-                      -Dsonar.host.url=http://<your-sonarqube-server>:9000 \
+                      -Dsonar.host.url=http://3.90.64.21:9000/ \
                       -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
