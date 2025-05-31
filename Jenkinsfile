@@ -4,17 +4,16 @@ pipeline {
     environment {
         REPO_URL = 'https://github.com/Payalingle/React_Application.git'
         IMAGE_NAME = 'react-application'
-        AWS_REGION = 'us-east-1' // Change as needed
+        AWS_REGION = 'us-east-1'
         ECR_URL = "561410231694.dkr.ecr.us-east-1.amazonaws.com/react-application"
-        SONARQUBE_ENV = 'SonarQube' // Jenkins SonarQube scanner name
+        SONARQUBE_ENV = 'SonarQube' // Must match name in Jenkins Global Configuration
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                git branch:'main', url: 'https://github.com/Payalingle/React_Application.git', credentialsId: 'github-creds'
-
+                git branch: 'main', url: "${REPO_URL}", credentialsId: 'github-creds'
             }
         }
 
@@ -33,17 +32,19 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh '''
-                    sonar-scanner \
-                      -Dsonar.projectKey=React_App \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=http://3.90.64.21:9000/ \
-                      -Dsonar.login=$SONAR_TOKEN
-                    '''
+                    script {
+                        def scannerHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                          -Dsonar.projectKey=React_App \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://3.90.64.21:9000 \
+                          -Dsonar.login=${SONAR_TOKEN}
+                        """
+                    }
                 }
             }
         }
-
 
         stage('Build Docker Image') {
             steps {
@@ -54,8 +55,9 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 sh '''
-                trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:latest || true
+                trivy image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:latest
                 '''
+                // You can add `|| true` above if you don't want the pipeline to fail on vulnerabilities.
             }
         }
 
