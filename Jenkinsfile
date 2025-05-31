@@ -31,18 +31,22 @@ pipeline {
             environment {
                 SONAR_TOKEN = credentials('sonar-token')
             }
-            steps {
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
-                    sh '''
-                    sonar-scanner \
-                      -Dsonar.projectKey=React_App \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=http://3.90.64.21:9000/ \
-                      -Dsonar.login=$SONAR_TOKEN
-                    '''
-                }
+            // steps {
+            //     withSonarQubeEnv("${SONARQUBE_ENV}") {
+            //         sh '''
+            //         sonar-scanner \
+            //           -Dsonar.projectKey=React_App \
+            //           -Dsonar.sources=. \
+            //           -Dsonar.host.url=http://3.90.64.21:9000/ \
+            //           -Dsonar.login=$SONAR_TOKEN
+            //         '''
+            //     }
+            withSonarQubeEnv('SonarQube') {
+    sh "${tool 'SonarScanner'}/bin/sonar-scanner -Dsonar.projectKey=React_App -Dsonar.sources=. ..."
+}
             }
         }
+
 
         stage('Build Docker Image') {
             steps {
