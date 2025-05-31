@@ -78,12 +78,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        failure {
-            mail to: 'you@example.com',
-                 subject: "Jenkins Pipeline Failed",
-                 body: "Pipeline failed at ${env.STAGE_NAME}"
-        }
-    }
 }
