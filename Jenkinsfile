@@ -5,7 +5,7 @@ pipeline {
         REPO_URL = 'https://github.com/Payalingle/React_Application.git'
         IMAGE_NAME = 'react-application'
         AWS_REGION = 'us-east-1' // Change as needed
-        ECR_URL = "<your_aws_account_id>.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}"
+        ECR_URL = "561410231694.dkr.ecr.us-east-1.amazonaws.com/react-application"
         SONARQUBE_ENV = 'SonarQube' // Jenkins SonarQube scanner name
     }
 
