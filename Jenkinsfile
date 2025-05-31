@@ -13,7 +13,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: "${REPO_URL}", credentialsId: 'github-creds'
+                git branch: 'main', url: "https://github.com/Payalingle/React_Application.git", credentialsId: 'github-creds'
             }
         }
 
